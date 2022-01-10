@@ -3,10 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\Product;
+use App\Classe\Search;
+use App\Form\SearchType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+
 
 class ProductController extends AbstractController
 {
@@ -20,12 +24,23 @@ class ProductController extends AbstractController
     /**
      * @Route("/produits", name="products")
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $products = $this->entityManager->getRepository(Product::class)->findAll();
+
+        $search = new Search();
+        $form = $this->createform(SearchType::class, $search);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $products = $this->entityManager->getRepository(Product::class)->findWithSearch($search);
+        } else {
+            $products = $this->entityManager->getRepository(Product::class)->findAll();
+        }
 
         return $this->render('product/index.html.twig', [
-            'products' => $products
+            'products' => $products,
+            'form' => $form->createView()
         ]);
     }
 
@@ -35,13 +50,15 @@ class ProductController extends AbstractController
     public function show($slug): Response
     {
         $product = $this->entityManager->getRepository(Product::class)->findOneBySlug($slug);
+        $products = $this->entityManager->getRepository(Product::class)->findByIsBest(1);
 
         if (!$product) {
             return $this->redirectToRoute('products');
         }
 
         return $this->render('product/show.html.twig', [
-            'product' => $product
+            'product' => $product,
+            'products' => $products
         ]);
     }
 }
