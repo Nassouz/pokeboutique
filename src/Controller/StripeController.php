@@ -2,15 +2,17 @@
 
 namespace App\Controller;
 
+use Stripe\Stripe;
 use App\Classe\Cart;
 use App\Entity\Order;
 use App\Entity\Product;
-use Doctrine\ORM\EntityManagerInterface;
 use Stripe\Checkout\Session;
-use Stripe\Stripe;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class StripeController extends AbstractController
 {
@@ -20,7 +22,7 @@ class StripeController extends AbstractController
     public function index(EntityManagerInterface $entityManager, Cart $cart, $reference)
     {
         $products_for_stripe = [];
-        $YOUR_DOMAIN = 'http://127.0.0.1:8000';
+        $YOUR_DOMAIN = 'http://127.0.0.1:8000/';
 
         $order = $entityManager->getRepository(Order::class)->findOneByReference($reference);
 
@@ -35,8 +37,8 @@ class StripeController extends AbstractController
                     'currency' => 'eur',
                     'unit_amount' => $product->getPrice(),
                     'product_data' => [
-                        'name' => $product->getProduct()
-                        //'images' => [$YOUR_DOMAIN."/uploads/".$product_object->getIllustration()],
+                        'name' => $product->getProduct(),
+                        'images' => [$YOUR_DOMAIN."/uploads".$product_object->getIllustration()],
                     ],
                 ],
                 'quantity' => $product->getQuantity(),
@@ -56,7 +58,7 @@ class StripeController extends AbstractController
             'quantity' => 1,
         ];
 
-        Stripe::setApiKey('sk_test_51KGvqIDyELDGRyvwsqqFbPb3dS2hgeYHvknh8Mw0TM9vUpE6L2AN4r69gOzIEgmmnP7EBqFR8EXNyZ7hLvu53sbc00rJ7G3brE');
+        Stripe::setApiKey('sk_test_51JpXQwEPeWS22cBu93EPyF13NUZzEcT8luLdWudWwpseIeerDRwxHQAsAjzijRyynwZKmVqRON8c2A371YqzxH7000ljnXW0XB');
 
         $checkout_session = Session::create([
             'customer_email' => $this->getUser()->getEmail(),
